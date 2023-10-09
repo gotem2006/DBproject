@@ -107,13 +107,13 @@ def show_all_products(message):
 @bot.message_handler(func=lambda message: message.text == "Профиль")
 def add_user(message):
     db_start()
-    status = get_user_registration_status(message.from_user.id)
+    status = get_user_info(message.from_user.id)[5]
     if status == 0:
         bot.send_message(message.from_user.id, "Введите ваше имя:")
         bot.register_next_step_handler(message, load_user_name)
     else:
         markup = profileMenu()
-        bot.send_message(message.from_user.id,"Вы профиль уже зарегистрирован!",reply_markup=markup)
+        bot.send_message(message.from_user.id,f"Вы профиль уже зарегистрирован!{status}",reply_markup=markup)
         return
 
 def load_user_name(message):

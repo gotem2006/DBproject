@@ -102,9 +102,6 @@ def all_product():
     products = cur.fetchall()
     return products
 
-def get_user_registration_status(user_id):
-    status = cur.execute("SELECT registration_status FROM user WHERE telegram_id = ?",(user_id,)).fetchall()
-    return status
 
 def change_name(user_name, user_id):
     cur.execute("UPDATE user SET name = ? WHERE telegram_id = ?",(user_name, user_id,))
