@@ -4,9 +4,9 @@ import telebot
 
 
 
-API_TOKEN = '6695726317:AAEq0ILGsROLJsFqqzBOKPr-krpF84m_dHQ'
+API_TOKEN = ''
 
-allowed_users = [802701914, 615875363, 1402589213]
+allowed_users = []
 
 
 
