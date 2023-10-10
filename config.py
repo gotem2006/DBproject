@@ -1,15 +1,15 @@
 from telebot import types
+from models import *
 import telebot
 
 
 
 
-API_TOKEN = '6695726317:AAEq0ILGsROLJsFqqzBOKPr-krpF84m_dHQ'
+API_TOKEN = ''
 
-allowed_users = [802701914, 615875363, 1402589213]
-
-
-
+allowed_users = []
+db_start()
+categories = get_all_name_categories()
 button1 = types.KeyboardButton("Заказы")
 button2 = types.KeyboardButton("Товары")
 button3 = types.KeyboardButton("Профиль")
@@ -24,8 +24,8 @@ button7 = types.KeyboardButton("Посмотреть профиль")
 button8 = types.KeyboardButton("Имя")
 button9 = types.KeyboardButton("Номер телефона")
 button10 = types.KeyboardButton("Электронная почта")
-
-
+button11 = types.KeyboardButton("Следующий товар")
+button12 = types.KeyboardButton("Предыдущий товар")
 admin_button2 = types.KeyboardButton("Добавить категорию")
 admin_button = types.KeyboardButton("Добавить товар")
 
@@ -52,4 +52,10 @@ def profileMenu():
 def editMenu():
     markup = types.ReplyKeyboardMarkup()
     markup.add(button8, button9, button10)
+    return markup
+
+
+def productMenu():
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(button5, button12, button11)
     return markup

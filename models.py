@@ -16,7 +16,8 @@ def db_start():
                  name TEXT,\
                 phonenumber TEXT,\
                 email TEXT,\
-                registration_status INTEGER)")
+                registration_status INTEGER,\
+                position INTEGER)")
     db.commit()
     
     cur.execute("CREATE TABLE IF NOT EXISTS suplies(\
@@ -46,11 +47,17 @@ def get_all_users_orders(user_id):
     user_orders = cur.execute("SELECT * FROM orders WHERE user_id = ?", (user_id,)).fetchall()
     return user_orders
 
-def add_order(user_id, suply_id):
-    cur.execute("INSERT into orders (suplies, user_id) VALUES (?, ?)",(suply_id, user_id,))  # ??????????
+def add_order(user_id, suply_id, total_price):
+    order = cur.execute("SELECT 1 FROM orders WHERE user_id = ?",(user_id,)).fetchone()
+    if not order:
+        cur.execute("INSERT INTO orders (suplies, user_id, totalPrice) VALUES (?, ?, ?)",(suply_id, user_id, total_price,))
+    else:
+        cur.execute("UPDATE orders SET totalPrice = ? WHERE user_id = ?",(total_price, user_id,))
     db.commit()
 
-
+def get_total_price(user_id):
+    total_price = cur.execute("SELECT totalPrice FROM orders WHERE user_id = ?", (user_id,)).fetchall()
+    return total_price
 
 # Категории
 def create_category(name):
@@ -71,6 +78,12 @@ def get_products_from_categoty(category_id):
     products_in_category = cur.execute("SELECT * FROM suplies WHERE category_id = ?", (category_id,)).fetchall()
     return products_in_category
 
+def get_all_name_categories():
+    names = []
+    for name in cur.execute("SELECT name FROM categories").fetchall():
+        names.append(name[0])
+    return names
+
 
 def get_name_of_category(category_id):
     category_name = cur.execute("SELECT name FROM categories WHERE category_id = ?", (category_id,)).fetchall()
@@ -83,7 +96,7 @@ def get_name_of_category(category_id):
 def create_profile(telegram_id):
     user = cur.execute("SELECT 1 FROM user WHERE telegram_id = ?", (telegram_id,)).fetchone()
     if not user:
-        cur.execute("INSERT INTO user (telegram_id, name, phonenumber, email, registration_status) VALUES(?, ?, ?, ?, ?)", (telegram_id, '', '', '', 0))
+        cur.execute("INSERT INTO user (telegram_id, name, phonenumber, email, registration_status, position) VALUES(?, ?, ?, ?, ?, ?)", (telegram_id, '', '', '', 0, 0))
         db.commit()
 
 def create_product(name, price, description, category, photos):
@@ -107,6 +120,10 @@ def change_name(user_name, user_id):
     cur.execute("UPDATE user SET name = ? WHERE telegram_id = ?",(user_name, user_id,))
     db.commit()
 
+def change_position(user_id, position):
+    cur.execute("UPDATE user SET position = ? WHERE telegram_id = ?",(position,user_id,))
+    db.commit()
+
 
 def get_user_info(user_id):
     user = cur.execute("SELECT * FROM user WHERE telegram_id = ?", (user_id,)).fetchone()
@@ -119,4 +136,10 @@ def change_phonenumber(user_phonenumber, user_id):
 
 def change_email(user_email, user_id):
     cur.execute("UPDATE user SET email = ? WHERE telegram_id = ?",(user_email, user_id,))
+    db.commit()
+
+
+
+def get_product_price(product_id):
+    cur.execute("SELECT price FROM suplies WHERE suplies_id =?",(product_id,)).fetchall()
     db.commit()

@@ -9,9 +9,6 @@ from io import BytesIO
 bot = telebot.TeleBot(API_TOKEN)
 
 
-
-
-
 @bot.message_handler(commands=['start'],content_types=['text','photo'])
 def start(message):
     db_start()
@@ -77,33 +74,89 @@ def all_products(message):
     db_start()
     categories = get_all_categories()
     markup = addMenu()
-
+    
     for category in categories:
         markup.add(types.KeyboardButton(f"{category[1]}"))
     bot.send_message(message.from_user.id, "Выберите категорию товара", reply_markup=markup)
-    bot.register_next_step_handler(message, suplies_in_category)
 
 
+@bot.message_handler(func=lambda message: message.text in categories)
 def suplies_in_category(message):
-    if message.text != "Все товары" and message.text != "Назад":
-        category_id = get_categoryID(message.text)
-        all_productsInCategory = get_products_from_categoty(category_id)
-        for product in all_productsInCategory:
-            respones = requests.get(product[4])
-            bot.send_photo(message.from_user.id, BytesIO(respones.content))
-            bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]} рублей\nОписание: {product[3]}")
+    category_id = get_categoryID(message.text)
+    all_productsInCategory = get_products_from_categoty(category_id)
+    for product in all_productsInCategory:
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]} рублей\nОписание: {product[3]}")
     
 
 @bot.message_handler(func=lambda message: message.text == "Все товары")
 def show_all_products(message):
     products = all_product()
-    for product in products:
+    user_position = get_user_info(message.from_user.id)[6]
+    if user_position < len(products):
+        markup = productMenu()
+        product = products[user_position]
         respones = requests.get(product[4])
         bot.send_photo(message.from_user.id, BytesIO(respones.content))
-        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}")
-    return
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
+        user_position +=  1
+        change_position(message.from_user.id, user_position)
+    else:
+        user_position = 0
+        change_position(message.from_user.id, user_position)
+        markup = productMenu()
+        product = products[user_position]
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
+        
+    
+    
+@bot.message_handler(func=lambda message: message.text == "Предыдущий товар")
+def previous_product(message):
+    products = all_product()
+    user_position = get_user_info(message.from_user.id)[6]
+    if user_position < len(products):
+        markup = productMenu()
+        product = products[user_position]
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
+        user_position -=  1
+        change_position(message.from_user.id, user_position)
+    else:
+        user_position = len(all_product())-1
+        change_position(message.from_user.id, user_position)
+        markup = productMenu()
+        product = products[user_position]
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
 
 
+@bot.message_handler(func=lambda message: message.text == "Следующий товар")
+def next_product(message):
+    products = all_product()
+    user_position = get_user_info(message.from_user.id)[6]
+    if user_position < len(products):
+        markup = productMenu()
+        product = products[user_position]
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
+        user_position +=  1
+        change_position(message.from_user.id, user_position)
+    else:
+        user_position = 0
+        change_position(message.from_user.id, user_position)
+        markup = productMenu()
+        product = products[user_position]
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content))
+        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
+        
+    
 @bot.message_handler(func=lambda message: message.text == "Профиль")
 def add_user(message):
     db_start()
@@ -195,7 +248,11 @@ def next_product(message):
 
 
 @bot.message_handler(func=lambda message: message.text == "Добавить в корзину")
-def add_to_cart(messsage):
-    pass
-
+def add_to_cart(message):
+    total_price = get_total_price(message.from_user.id)
+    user_position = f"{get_user_info(message.from_user.id)[6]},"
+    total_price += get_product_price(user_position)
+    add_order(message.from_user.id, user_position, total_price)
+    
+    
 bot.infinity_polling()
