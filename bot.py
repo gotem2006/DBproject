@@ -100,16 +100,10 @@ def show_all_products(message):
         respones = requests.get(product[4])
         bot.send_photo(message.from_user.id, BytesIO(respones.content))
         bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
-        user_position +=  1
+        user_position += 1
+        if user_position >= len(products):
+            user_position = 0
         change_position(message.from_user.id, user_position)
-    else:
-        user_position = 0
-        change_position(message.from_user.id, user_position)
-        markup = productMenu()
-        product = products[user_position]
-        respones = requests.get(product[4])
-        bot.send_photo(message.from_user.id, BytesIO(respones.content))
-        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
         
     
     
@@ -125,6 +119,7 @@ def previous_product(message):
         bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
         user_position -=  1
         change_position(message.from_user.id, user_position)
+
     else:
         user_position = len(all_product())-1
         change_position(message.from_user.id, user_position)
@@ -145,17 +140,11 @@ def next_product(message):
         respones = requests.get(product[4])
         bot.send_photo(message.from_user.id, BytesIO(respones.content))
         bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
-        user_position +=  1
+        user_position += 1
+        if user_position >= len(products):
+            user_position = 0
         change_position(message.from_user.id, user_position)
-    else:
-        user_position = 0
-        change_position(message.from_user.id, user_position)
-        markup = productMenu()
-        product = products[user_position]
-        respones = requests.get(product[4])
-        bot.send_photo(message.from_user.id, BytesIO(respones.content))
-        bot.send_message(message.from_user.id, f"Название: {product[2]}\nЦена: {product[1]}\nОписание: {product[3]}", reply_markup=markup)
-        
+
     
 @bot.message_handler(func=lambda message: message.text == "Профиль")
 def add_user(message):
@@ -190,14 +179,14 @@ def bact_to_menu(message):
     bot.send_message(message.from_user.id, "Вы вернулись в главное меню", reply_markup= markup)
 
 
-@bot.message_handler(func=lambda message: message.text == "Заказы" )
-def all_orders(message):
-    user_orders = get_all_users_orders(message.from_user.id)
-    if len(user_orders) <= 0:
-        bot.send_message(message.from_user.id, "У вас нету заказов!")
-    else:
-        for order in user_orders:
-            bot.send_message(message.from_user.id, "")
+# @bot.message_handler(func=lambda message: message.text == "Заказы" )
+# def all_orders(message):
+#     user_orders = get_all_users_orders(message.from_user.id)
+#     if len(user_orders) <= 0:
+#         bot.send_message(message.from_user.id, "У вас нету заказов!")
+#     else:
+#         for order in user_orders:
+#             bot.send_message(message.from_user.id, "")
 
 
 
@@ -242,17 +231,32 @@ def show_profile(message):
     user = get_user_info(message.from_user.id)
     bot.send_message(message.from_user.id, f"Ваше имя: {user[2]}\nВаш номер телефона: {user[3]}\nВаша электронная почта: {user[4]}")
 
-@bot.message_handler(func=lambda message: message.text == "Далее")
-def next_product(message):
-    pass
 
-
-@bot.message_handler(func=lambda message: message.text == "Добавить в корзину")
+@bot.message_handler(func=lambda message: message.text == "Добавить в заказ")
 def add_to_cart(message):
     total_price = get_total_price(message.from_user.id)
-    user_position = f"{get_user_info(message.from_user.id)[6]},"
+    user_position = get_user_info(message.from_user.id)[6] + 1
     total_price += get_product_price(user_position)
-    add_order(message.from_user.id, user_position, total_price)
+    suplies = get_suplies_from_order(message.from_user.id)
+    suplies += f"{user_position} "
+    add_order(message.from_user.id, suplies, total_price)
     
-    
+@bot.message_handler(func=lambda message: message.text == "Заказы")
+def display_orders(message):
+    order = get_order(message.from_user.id)
+    suplies_id = order[2].split(" ")
+    suplies = []
+    for item in range(len(suplies_id)):
+        suplies.append(get_product(int(suplies_id[item])))
+
+    count = 1
+    bot.send_message(message.from_user.id, "Ваша корзина:")
+    for product in suplies:
+        respones = requests.get(product[4])
+        bot.send_photo(message.from_user.id, BytesIO(respones.content), caption=f'Товар №{count}\nНазвание: {product[2]}\nОписание: {product[3]}\nСтоимлсть: {product[1]}')
+        count += 1 
+    bot.send_message(message.from_user.id, f"Итоговая стоимость заказа: {order[3]}")
+
+
+
 bot.infinity_polling()

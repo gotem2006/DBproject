@@ -40,24 +40,32 @@ def db_start():
     db.commit()
 
 
-
-
 # Заказы
 def get_all_users_orders(user_id):
     user_orders = cur.execute("SELECT * FROM orders WHERE user_id = ?", (user_id,)).fetchall()
     return user_orders
 
-def add_order(user_id, suply_id, total_price):
+def add_order(user_id, suplies, total_price):
     order = cur.execute("SELECT 1 FROM orders WHERE user_id = ?",(user_id,)).fetchone()
     if not order:
-        cur.execute("INSERT INTO orders (suplies, user_id, totalPrice) VALUES (?, ?, ?)",(suply_id, user_id, total_price,))
+        cur.execute("INSERT INTO orders (suplies, user_id, totalPrice) VALUES (?, ?, ?)",(suplies, user_id, total_price,))
     else:
-        cur.execute("UPDATE orders SET totalPrice = ? WHERE user_id = ?",(total_price, user_id,))
+        cur.execute("UPDATE orders SET totalPrice = ?, suplies = ? WHERE user_id = ?",(total_price, suplies, user_id,))
     db.commit()
 
+def get_order(user_id):
+    order = cur.execute("SELECT * FROM orders WHERE user_id =?",(user_id,)).fetchone()
+    return order
+def get_suplies_from_order(user_id):
+    suplies = cur.execute("SELECT suplies FROM orders WHERE user_id =?",(user_id,)).fetchone()
+    return suplies[0]
+
 def get_total_price(user_id):
-    total_price = cur.execute("SELECT totalPrice FROM orders WHERE user_id = ?", (user_id,)).fetchall()
-    return total_price
+    total_price = cur.execute("SELECT totalPrice FROM orders WHERE user_id = ?", (user_id,)).fetchone()
+    if not total_price:
+        total_price = 0
+        return total_price
+    return total_price[0]
 
 # Категории
 def create_category(name):
@@ -68,7 +76,6 @@ def get_all_categories():
     cur.execute("SELECT * FROM categories")
     categories = cur.fetchall()
     return categories
-
 
 def get_categoryID(name):
     category = cur.execute("SELECT category_id FROM categories WHERE name = ?", (name,)).fetchone()
@@ -84,13 +91,9 @@ def get_all_name_categories():
         names.append(name[0])
     return names
 
-
 def get_name_of_category(category_id):
     category_name = cur.execute("SELECT name FROM categories WHERE category_id = ?", (category_id,)).fetchall()
     return category_name
-
-
-
 
 # Пользователь
 def create_profile(telegram_id):
@@ -104,17 +107,14 @@ def create_product(name, price, description, category, photos):
                 (price, name, description, category, photos))
     db.commit()
 
-
 def edit_profile(telegram_id, user_name, user_phonenumber, user_email, user_registration_status):
     cur.execute("UPDATE user SET name = ?, phonenumber  = ?, email = ?, registration_status = ? WHERE telegram_id = ?", (user_name, user_phonenumber, user_email, user_registration_status, telegram_id))
     db.commit()
 
-    
 def all_product():
     cur.execute("SELECT * FROM suplies")
     products = cur.fetchall()
     return products
-
 
 def change_name(user_name, user_id):
     cur.execute("UPDATE user SET name = ? WHERE telegram_id = ?",(user_name, user_id,))
@@ -124,7 +124,6 @@ def change_position(user_id, position):
     cur.execute("UPDATE user SET position = ? WHERE telegram_id = ?",(position,user_id,))
     db.commit()
 
-
 def get_user_info(user_id):
     user = cur.execute("SELECT * FROM user WHERE telegram_id = ?", (user_id,)).fetchone()
     return user
@@ -133,13 +132,14 @@ def change_phonenumber(user_phonenumber, user_id):
     cur.execute("UPDATE user SET phonenumber = ? WHERE telegram_id = ?",(user_phonenumber, user_id,))
     db.commit()
 
-
 def change_email(user_email, user_id):
     cur.execute("UPDATE user SET email = ? WHERE telegram_id = ?",(user_email, user_id,))
     db.commit()
 
-
-
 def get_product_price(product_id):
-    cur.execute("SELECT price FROM suplies WHERE suplies_id =?",(product_id,)).fetchall()
-    db.commit()
+    price = cur.execute("SELECT price FROM suplies WHERE suplies_id =?",(product_id,)).fetchone()
+    return price[0]
+
+def get_product(product_id):
+    product = cur.execute("SELECT * FROM SUPLIES WHERE suplies_id =?",(product_id,)).fetchone()
+    return product

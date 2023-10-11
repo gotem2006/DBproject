@@ -1,13 +1,11 @@
 from telebot import types
 from models import *
-import telebot
-
-
 
 
 API_TOKEN = ''
 
 allowed_users = []
+
 db_start()
 categories = get_all_name_categories()
 button1 = types.KeyboardButton("Заказы")
@@ -26,6 +24,8 @@ button9 = types.KeyboardButton("Номер телефона")
 button10 = types.KeyboardButton("Электронная почта")
 button11 = types.KeyboardButton("Следующий товар")
 button12 = types.KeyboardButton("Предыдущий товар")
+button13 = types.KeyboardButton("Добавить в заказ")
+
 admin_button2 = types.KeyboardButton("Добавить категорию")
 admin_button = types.KeyboardButton("Добавить товар")
 
@@ -57,5 +57,5 @@ def editMenu():
 
 def productMenu():
     markup = types.ReplyKeyboardMarkup()
-    markup.add(button5, button12, button11)
+    markup.add(button5, button12, button13, button11)
     return markup
