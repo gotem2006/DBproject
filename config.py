@@ -1,6 +1,7 @@
 from telebot import types
 from models import *
-
+import requests
+from io import BytesIO
 
 API_TOKEN = ''
 
@@ -25,7 +26,10 @@ button10 = types.KeyboardButton("Электронная почта")
 button11 = types.KeyboardButton("Следующий товар")
 button12 = types.KeyboardButton("Предыдущий товар")
 button13 = types.KeyboardButton("Добавить в заказ")
-
+button14 = types.KeyboardButton("Корзина")
+button15 = types.KeyboardButton("История заказов")
+button16 = types.KeyboardButton("Оформить заказ")
+button17 = types.KeyboardButton("Оплатить")
 admin_button2 = types.KeyboardButton("Добавить категорию")
 admin_button = types.KeyboardButton("Добавить товар")
 
@@ -58,4 +62,20 @@ def editMenu():
 def productMenu():
     markup = types.ReplyKeyboardMarkup()
     markup.add(button5, button12, button13, button11)
+    return markup
+
+def ordersMenu():
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(button5, button14, button15)
+    return markup 
+
+
+def cartMenu():
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(button5, button16)
+    return markup
+
+def checkoutMenu():
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(button5, button17)
     return markup

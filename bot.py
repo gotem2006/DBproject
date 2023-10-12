@@ -179,17 +179,6 @@ def bact_to_menu(message):
     bot.send_message(message.from_user.id, "Вы вернулись в главное меню", reply_markup= markup)
 
 
-# @bot.message_handler(func=lambda message: message.text == "Заказы" )
-# def all_orders(message):
-#     user_orders = get_all_users_orders(message.from_user.id)
-#     if len(user_orders) <= 0:
-#         bot.send_message(message.from_user.id, "У вас нету заказов!")
-#     else:
-#         for order in user_orders:
-#             bot.send_message(message.from_user.id, "")
-
-
-
 @bot.message_handler(func=lambda message: message.text == "Редактировать профиль")
 def edit_profile_info(message):
     markup = editMenu()
@@ -238,25 +227,75 @@ def add_to_cart(message):
     user_position = get_user_info(message.from_user.id)[6] + 1
     total_price += get_product_price(user_position)
     suplies = get_suplies_from_order(message.from_user.id)
-    suplies += f"{user_position} "
+    if suplies == "":
+        suplies += f"{user_position}"
+    else:
+        suplies += f"{ user_position}"
     add_order(message.from_user.id, suplies, total_price)
-    
+
+
 @bot.message_handler(func=lambda message: message.text == "Заказы")
+def orders(message):
+    markup= ordersMenu()
+    bot.send_message(message.from_user.id, "Какой раздел вамнужен?", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: message.text == "Корзина")
 def display_orders(message):
-    order = get_order(message.from_user.id)
+    order = get_order(message.from_user.id, "1")
+    if not order:
+        bot.send_message(message.from_user.id, "В корзине нет товаров!")
+        return
     suplies_id = order[2].split(" ")
     suplies = []
     for item in range(len(suplies_id)):
         suplies.append(get_product(int(suplies_id[item])))
 
     count = 1
+    markup = cartMenu()
     bot.send_message(message.from_user.id, "Ваша корзина:")
     for product in suplies:
         respones = requests.get(product[4])
         bot.send_photo(message.from_user.id, BytesIO(respones.content), caption=f'Товар №{count}\nНазвание: {product[2]}\nОписание: {product[3]}\nСтоимлсть: {product[1]}')
         count += 1 
-    bot.send_message(message.from_user.id, f"Итоговая стоимость заказа: {order[3]}")
+    bot.send_message(message.from_user.id, f"Итоговая стоимость заказа: {order[3]}", reply_markup=markup)
 
 
+
+
+@bot.message_handler(func=lambda message: message.text == "История заказов")
+def show_history(message):
+    orders_history = get_orders_history(message.from_user.id, "2")
+    if not orders_history:
+        bot.send_message(message.from_user.id, "У вас нету заказов!")
+        return
+    count_order = 1
+    count_product = 1
+    for order in orders_history:
+        suplies_id = order[2].split(" ")
+        suplies = [get_product(int(item)) for item in suplies_id]
+        bot.send_message(message.from_user.id, f"Заказ №{count_order}")
+        for suply in suplies:
+            respones = requests.get(suply[4])
+            bot.send_photo(message.from_user.id, BytesIO(respones.content), f'Товар №{count_product}\nНазвание: {suply[2]}\nОписание: {suply[3]}\nСтоимлсть: {suply[1]}')
+            count_product += 1
+        bot.send_message(message.from_user.id, f"Тоговая стоимость заказа: {order[3]}")
+        count_product = 1
+        count_order += 1
+
+
+@bot.message_handler(func=lambda message: message.text == "Оформить заказ")
+def checkout(message):
+    markup = checkoutMenu()
+    bot.send_message(message.from_user.id, "Введите адресс доставки:", reply_markup=markup)
+    bot.register_next_step_handler(message, load_adress)
+
+def load_adress(message):
+    adress = message.text
+    set_delivary_adress(message.from_user.id, adress)
+
+@bot.message_handler(func=lambda message: message.text == "Оплатить")
+def pay(message):
+    update_status(message.from_user.id, "2", "1")
+    bot.send_message(message.from_user.id, "Ваш заказ передан в обработку!")
 
 bot.infinity_polling()

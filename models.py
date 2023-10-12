@@ -35,29 +35,44 @@ def db_start():
                 status TEXT,\
                 suplies TEXT,\
                 totalPrice FLOAT,\
+                delivery_adress TEXT,\
                 user_id INTEGER,\
                 FOREIGN KEY(user_id) REFERENCES user(user_id))")
     db.commit()
 
 
 # Заказы
+def set_delivary_adress(user_id, deliavary_adress):
+    cur.execute("UPDATE orders SET delivery_adress = ? WHERE user_id = ? AND status = ?",(deliavary_adress, user_id, "1",))
+    db.commit()
+
+def update_status(user_id, status_set, status_setted):
+    cur.execute("UPDATE orders SET status= ? WHERE user_id =? AND status = ?", (status_set, user_id, status_setted,))
+    db.commit()
+
 def get_all_users_orders(user_id):
     user_orders = cur.execute("SELECT * FROM orders WHERE user_id = ?", (user_id,)).fetchall()
     return user_orders
 
+def get_orders_history(user_id, status):
+    history = cur.execute("SELECT * FROM orders WHERE user_id = ? AND status = ?",(user_id, status,)).fetchall()
+    return history
+
 def add_order(user_id, suplies, total_price):
     order = cur.execute("SELECT 1 FROM orders WHERE user_id = ?",(user_id,)).fetchone()
     if not order:
-        cur.execute("INSERT INTO orders (suplies, user_id, totalPrice) VALUES (?, ?, ?)",(suplies, user_id, total_price,))
+        cur.execute("INSERT INTO orders (suplies, user_id, totalPrice, status) VALUES (?, ?, ?, ?)",(suplies, user_id, total_price, "1",))
     else:
         cur.execute("UPDATE orders SET totalPrice = ?, suplies = ? WHERE user_id = ?",(total_price, suplies, user_id,))
     db.commit()
 
-def get_order(user_id):
-    order = cur.execute("SELECT * FROM orders WHERE user_id =?",(user_id,)).fetchone()
+def get_order(user_id, status):
+    order = cur.execute("SELECT * FROM orders WHERE user_id =? AND status = ?",(user_id, status,)).fetchone()
     return order
 def get_suplies_from_order(user_id):
     suplies = cur.execute("SELECT suplies FROM orders WHERE user_id =?",(user_id,)).fetchone()
+    if not suplies:
+        return ""
     return suplies[0]
 
 def get_total_price(user_id):
