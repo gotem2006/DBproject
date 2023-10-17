@@ -7,7 +7,7 @@ from io import BytesIO
 
 
 bot = telebot.TeleBot(API_TOKEN)
-
+a = 10
 
 @bot.message_handler(commands=['start'],content_types=['text','photo'])
 def start(message):
